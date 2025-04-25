@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Expense Tracker Dashboard</title>
+    <style>
+        body { font-family: sans-serif; line-height: 1.6; padding: 20px; }
+        h1, h2 { color: #333; }
+        nav a { margin-right: 15px; text-decoration: none; color: #007bff; }
+        nav a:hover { text-decoration: underline; }
+        form { margin: 20px 0; padding: 15px; border: 1px solid #ccc; border-radius: 5px; background-color: #f9f9f9; }
+        input[type="number"], input[type="text"], button { padding: 8px; margin-right: 5px; border: 1px solid #ccc; border-radius: 3px; }
+        button { background-color: #28a745; color: white; border: none; cursor: pointer; }
+        button:hover { background-color: #218838; }
+        ul { list-style: none; padding: 0; }
+        li { margin-bottom: 8px; padding: 10px; border: 1px solid #eee; border-radius: 4px; background-color: #fff; }
+        .expense-item { display: flex; justify-content: space-between; }
+        .expense-details { color: #555; font-size: 0.9em; }
+        .budget-info { margin-bottom: 20px; }
+        .over-budget { color: red; font-weight: bold; }
+        .flash-messages p { padding: 10px; margin-bottom: 15px; border-radius: 4px; }
+        .flash-success { background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .flash-error { background-color: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        .flash-warning { background-color: #fff3cd; color: #856404; border: 1px solid #ffeeba; }
+        .insights { margin-top: 30px; background-color: #eef; padding: 15px; border-radius: 5px; border: 1px solid #ccd; }
+        .insights h2 { margin-top: 0; color: #335; }
+        .insights li { background: none; border: none; padding: 5px 0; margin-bottom: 5px; }
+    </style>
+</head>
+<body>
+    <h1>📊 Expense Tracker Dashboard</h1>
+
+    <div class="flash-messages">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <p class="flash-{{ category }}">{{ message }}</p> {# Use category as CSS class #}
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+    </div>
+
+    <nav>
+        <a href="{{ url_for('add_expense') }}">➕ Add Expense</a> |
+        <a href="{{ url_for('download_report') }}">📄 Download Report (PDF)</a>
+    </nav>
+
+    <div class="budget-info">
+        <h2>Budget: ₹{{ "%.2f"|format(budget) }}</h2> {# Format to 2 decimal places #}
+        <h2>Total Spent This Period: ₹{{ "%.2f"|format(total_spent) }}</h2> {# Format to 2 decimal places #}
+        {% if over_budget %}
+            <p class="over-budget">⚠️ You have exceeded your budget!</p>
+        {% elif budget > 0 %}
+             <p style="color: green;">✅ You are within your budget.</p>
+        {% else %}
+             <p style="color: orange;">ℹ️ Set a budget to track your spending against it.</p>
+        {% endif %}
+    </div>
+
+    <form action="{{ url_for('set_budget') }}" method="POST">
+        <label for="budget">Set/Update Monthly Budget (₹):</label>
+        <input type="number" step="0.01" min="0" name="budget" placeholder="e.g., 5000.00" required>
+        <button type="submit">Set Budget</button>
+    </form>
+
+    {% if insights %}
+        <div class="insights">
+            <h2>💡 AI Insights</h2>
+            <ul>
+                {% for point in insights %}
+                    <li>{{ point }}</li>
+                {% else %}
+                    <li>No insights available at the moment.</li>
+                {% endfor %}
+            </ul>
+        </div>
+    {% endif %}
+
+    <h2>Recent Expenses (Last 10)</h2>
+    {% if expenses %}
+    <ul>
+        {% for expense in expenses %}
+            <li>
+                <div class="expense-item">
+                    <span>{{ expense.title }}</span>
+                    <span><strong>₹{{ "%.2f"|format(expense.amount) }}</strong></span>
+                </div>
+                <div class="expense-details">
+                    Category: {{ expense.category }} | Added: {{ expense.formatted_date }}
+                </div>
+            </li>
+        {% endfor %}
+    </ul>
+    {% else %}
+        <p>No expenses recorded yet. <a href="{{ url_for('add_expense') }}">Add your first one!</a></p>
+    {% endif %}
+
+</body>
+</html>
